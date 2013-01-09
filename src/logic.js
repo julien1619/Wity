@@ -2,7 +2,7 @@ $(document).ready( function() {
 
 	var colorList = ["#111111","#ffffff","#11ffff"];
 
-	var socket = io.connect('http://creatiwity.net:1337');
+	var socket = io.connect(document.URL);
 	
 	socket.on('boxAdded', function (data) {
 		console.log(data);
