@@ -39,7 +39,8 @@ function handler (req, res) {
 }
 
 //Storing all boxes
-var boxes = [];
+var boxes = {};
+var id = 0;
 
 //Sending all boxes to the new entrants
 //Receiving all add/remove/update commands on boxes
@@ -48,33 +49,42 @@ var boxes = [];
 io.sockets.on('connection', function (socket) {
 	//socket.emit('news', { hello: 'world' });
 
+    for(var idStr in boxes){
+        if(boxes[idStr] != undefined) {
+            socket.emit('boxAdded', boxes[idStr]);
+        }
+    }
 	for(var i = 0;i < boxes.length;i++) {
 		socket.emit('boxAdded', { id: i+1, color: boxes[i] });
 	}
 
-	socket.on('add box', function () {
-		var boxColor = "#111111";
-		boxes.push(boxColor);
-		console.log("box "+boxes.length+" added");
-		socket.emit('boxAdded', { id: boxes.length, color: boxColor });
-		socket.broadcast.emit('boxAdded', { id: boxes.length, color: boxColor });
+	socket.on('add box', function (data) {
+        
+        var postit = {"id":id,"x":data.x,"y":data.y,"content":data.content};
+        
+        var idStr = id+"";
+		boxes[idStr] = postit;
+        
+		console.log("postit added");
+		socket.emit('boxAdded', { "id": id, "x":data.x, "y":data.y, "content":data.content});
+		socket.broadcast.emit('boxAdded', { "id": id, "x":data.x, "y":data.y, "content":data.content});
+        
+        id++;
 	});
 
-	socket.on('remove box', function () {
-		if(boxes.length > 0) {
-			boxes.pop();
-			console.log("box "+(boxes.length+1)+" removed");
-			socket.emit('boxRemoved', { id: boxes.length+1 });
-			socket.broadcast.emit('boxRemoved', { id: boxes.length+1 });
-		}
+	socket.on('remove box', function (data) {
+        var idToRemove = data.id+"";
+        boxes[idToRemove] = undefined;
+        socket.emit('boxRemoved', { "id": data.id });
+    	socket.broadcast.emit('boxRemoved', { "id": data.id });
 	});
 
 	socket.on('change box', function (data) {
-		console.log("Request changing box: "+data);
-		if(data.id <= boxes.length) {
-			boxes[data.id-1] = data.color;
-			socket.emit('boxChanged', data);
-			socket.broadcast.emit('boxChanged', data);
-		}
+		console.log("Request changing postit: "+data);
+        
+        var idStr = data.id+"";
+        boxes[idStr] = data;
+        socket.emit('boxChanged', data);
+    	socket.broadcast.emit('boxChanged', data);
 	});
 });

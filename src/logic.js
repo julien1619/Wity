@@ -1,12 +1,12 @@
 $(document).ready( function() {
 
-	var colorList = ["#111111","#ffffff","#11ffff"];
-
 	var socket = io.connect(document.URL);
+    var locked = {};
 	
 	socket.on('boxAdded', function (data) {
 		console.log(data);
-		addBox(data.id,data.color);
+		addBox(data.id,data.x,data.y,data.content);
+        locked[data.id] = false;
 	});
 	
 	socket.on('boxRemoved', function (data) {
@@ -16,54 +16,56 @@ $(document).ready( function() {
 	
 	socket.on('boxChanged', function (data) {
 		console.log(data);
-		changeColorBox(data.id, data.color);
+		changePostIt(data.id,data.x,data.y,data.content);
 	});
 	
-	function sendAddBox() {
-		socket.emit('add box');
+	function sendAddBox(xPos,yPos,content) {
+        var data = {"x":xPos,"y":yPos,"content":content};
+        socket.emit('add box',data);
 	}
 	
 	function sendRemoveBox() {
 		socket.emit('remove box');
 	}
 	
-	function sendChangeColorBox(boxId, newColor) {
-		console.log("Request changing box color");
-		socket.emit('change box', {id: boxId, color: newColor});
+	function sendChangePostIt(id, xPos, yPos, content) {
+		console.log("Request changing post it");
+        var data = {"id": id, "x":xPos,"y":yPos,"content":content};
+		socket.emit('change box', data);
 	}
-
-	//Add button
-	$("#b_add").click( function () {
-		sendAddBox();
-	});
-	
-	//Remove button
-	$("#b_rem").click( function () {
-		sendRemoveBox();
-	});
 	
 	//Change color button
-	$(".color_box").live("click", function () {
-		var idSubstr = $(this).attr('id').substring(5);
-		console.log("idSubstr:"+idSubstr);
+	$(".postit").live("click", function (event) {
+        var idSubstr = $(this).attr('id').substring(5);
+        console.log("idSubstr:"+idSubstr);
 		var id = parseInt(idSubstr);
-		
-		var newColor = colorList[0];	
-
-		var oldColor = colorToHex($(this).css('backgroundColor'));
-		var colorId = colorList.indexOf(oldColor);
-		console.log("oldColor:" + oldColor);
-		if(colorId < colorList.length-1) {
-			newColor = colorList[colorId+1];
-		}
-		
-		sendChangeColorBox(id, newColor);
+        
+        if(!locked[id]) {
+            //sendLock(id);
+    		editContent(id);
+        }
 	});
+    
+    function editContent(id) {
+        $("#postit_id").value(id);
+        $("#postit_content").value($("#wity_"+id+" > .postit_content").html());
+    }
+    
+    $("#save_button").click(function () {
+        if($("#postit_id").value()!="" || $("#postit_id").value()!=undefined) {
+            var id = $("#postit_id").value();
+            var xPos = $("#wity_"+id).css('x');
+            var yPos = $("#wity_"+id).css('y');
+            var content = $("#postit_content").value();
+            sendChangePostIt(id, xPos, yPos, content)
+        }
+    });
 	
 	//Add logic
-	function addBox(id,color) {
-		$("#content_test").append("<div id='wity_"+id+"' class='color_box'></div>");
-		$("#wity_"+id).css('backgroundColor',color);
+	function addBox(id, xPos, yPos, content) {
+		$("#postit_container").append("<div id='wity_"+id+"' class='postit'><div class='postit_header'></div><div class='postit_content'>"+content+"</div></div>");
+		$("#wity_"+id).css('x',xPos);
+        $("#wity_"+id).css('y',yPos);
 	}
 	
 	//Remove logic
@@ -72,28 +74,34 @@ $(document).ready( function() {
 	}
 	
 	//Change color button
-	function changeColorBox(id,newColor) {
-		$("#wity_"+id).css('backgroundColor',newColor);;
+	function changePostIt(id, xPos, yPos, content) {
+		$("#wity_"+id).css('x',xPos);
+        $("#wity_"+id).css('y',yPos);
+        $("#wity_"+id+" > .postit_content").html(content);
 	}
+    
+    $("#background_wrapper").click(function(event) {
+        var x = event.pageX - $(this).offset().left;
+        var y = event.pageY - $(this).offset().top; 
+        
+        sendAddBox(x,y,"");
+    });
 	
 	//Drag a post-it
-	$( ".postit" ).draggable({ containment: "#postit_container"});
-	
-	/*********
-	 * Tools
-	 ********/
-	
-	function colorToHex(color) {
-		if (color.substr(0, 1) === '#') {
-			return color;
-		}
-		var digits = /(.*?)rgb\((\d+), (\d+), (\d+)\)/.exec(color);
-		
-		var red = parseInt(digits[2]);
-		var green = parseInt(digits[3]);
-		var blue = parseInt(digits[4]);
-		
-		var rgb = blue | (green << 8) | (red << 16);
-		return digits[1] + '#' + rgb.toString(16);
-	};
+	$( ".postit" ).draggable({
+        containment: "#postit_container",
+        start: function( event, ui ) {
+            lock();
+        },
+        stop: function( event, ui ) {
+            var idSubstr = $(this).attr('id').substring(5);
+            console.log("idSubstr:"+idSubstr);
+    	    var id = parseInt(idSubstr);
+            
+            var xPos = $("#wity_"+id).css('x');
+            var yPos = $("#wity_"+id).css('y');
+            var content = $("#wity_"+id+" > .postit_content").html();
+            sendChangePostIt(id, xPos, yPos, content)
+        }
+    });
 });
