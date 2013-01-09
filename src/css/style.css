@@ -70,24 +70,53 @@ sup {
 
 /* Testing theme */
 
-#content_test {
-	width: 800px;
-	height: 400px;
+#wrapper {
+	position: relative;
+	width: 1000px;
+	height: 700px;
 	margin-left: auto;
 	margin-right: auto;
 }
 
-.color_box {
-	float: left;
-	width: 90px;
-	height: 90px;
-	margin: 5px 5px 5px 5px;
-	border: 1px solid #000000
+#background_wrapper {
+	position: absolute;
+	x: 0;
+	y: 0;
+	width: 1000px;
+	height: 700px;
+	background-image: url('../images/canvas.png');
+	background-repeat: no-repeat;
 }
 
-#main_buttons_area {
-	width: 800px;
+#postit_container {
+	position: absolute;
+	x: 0;
+	y: 0;
+	width: 1000px;
+	height: 700px;
+}
+
+.postit {
+	position: absolute;
+	width: 100px;
 	height: 100px;
-	margin-left: auto;
-	margin-right: auto;
+	border: 1px solid #000000;
+	background-color: #fff66b;
+}
+
+.postit_header {
+	width: 100%;
+	height: 20%;
+	background-color: #fff10d;
+}
+
+.postit_content {
+	width: 100%;
+	color: #000000;
+	font-weight: bold;
+}
+
+#test_postit {
+	x: 50px;
+	y: 50px;
 }
