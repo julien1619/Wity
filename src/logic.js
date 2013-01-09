@@ -42,7 +42,7 @@ $(document).ready( function() {
         
         if(!locked[id]) {
             //sendLock(id);
-    		editContent(id);
+            editContent(id);
         }
 	});
     
@@ -52,12 +52,12 @@ $(document).ready( function() {
     }
     
     $("#save_button").click(function () {
-        if($("#postit_id").value()!="" || $("#postit_id").value()!=undefined) {
+        if($("#postit_id").value()!=="" || $("#postit_id").value()!==undefined) {
             var id = $("#postit_id").value();
             var xPos = $("#wity_"+id).css('x');
             var yPos = $("#wity_"+id).css('y');
             var content = $("#postit_content").value();
-            sendChangePostIt(id, xPos, yPos, content)
+            sendChangePostIt(id, xPos, yPos, content);
         }
     });
 	
@@ -91,17 +91,17 @@ $(document).ready( function() {
 	$( ".postit" ).draggable({
         containment: "#postit_container",
         start: function( event, ui ) {
-            lock();
+            //lock();
         },
         stop: function( event, ui ) {
             var idSubstr = $(this).attr('id').substring(5);
             console.log("idSubstr:"+idSubstr);
-    	    var id = parseInt(idSubstr);
+            var id = parseInt(idSubstr);
             
             var xPos = $("#wity_"+id).css('x');
             var yPos = $("#wity_"+id).css('y');
             var content = $("#wity_"+id+" > .postit_content").html();
-            sendChangePostIt(id, xPos, yPos, content)
+            sendChangePostIt(id, xPos, yPos, content);
         }
     });
 });

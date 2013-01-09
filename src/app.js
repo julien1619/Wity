@@ -50,7 +50,7 @@ io.sockets.on('connection', function (socket) {
 	//socket.emit('news', { hello: 'world' });
 
     for(var idStr in boxes){
-        if(boxes[idStr] != undefined) {
+        if(boxes[idStr] !== undefined) {
             socket.emit('boxAdded', boxes[idStr]);
         }
     }
@@ -75,8 +75,8 @@ io.sockets.on('connection', function (socket) {
 	socket.on('remove box', function (data) {
         var idToRemove = data.id+"";
         boxes[idToRemove] = undefined;
-        socket.emit('boxRemoved', { "id": data.id });
-    	socket.broadcast.emit('boxRemoved', { "id": data.id });
+        socket.emit('boxRemoved', data);
+        socket.broadcast.emit('boxRemoved', data);
 	});
 
 	socket.on('change box', function (data) {
@@ -85,6 +85,6 @@ io.sockets.on('connection', function (socket) {
         var idStr = data.id+"";
         boxes[idStr] = data;
         socket.emit('boxChanged', data);
-    	socket.broadcast.emit('boxChanged', data);
+        socket.broadcast.emit('boxChanged', data);
 	});
 });
