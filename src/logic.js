@@ -76,6 +76,9 @@ $(document).ready( function() {
 		$("#wity_"+id).css('backgroundColor',newColor);;
 	}
 	
+	//Drag a post-it
+	$( ".postit" ).draggable({ containment: "#postit_container"});
+	
 	/*********
 	 * Tools
 	 ********/
