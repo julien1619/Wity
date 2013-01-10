@@ -47,25 +47,26 @@ $(document).ready( function() {
 	});
     
     function editContent(id) {
-        $("#postit_id").value(id);
-        $("#postit_content").value($("#wity_"+id+" > .postit_content").html());
+        $("#postit_id").val(id);
+        $("#postit_content").val($("#wity_"+id+" > .postit_content").html());
     }
     
     $("#save_button").click(function () {
-        if($("#postit_id").value()!=="" || $("#postit_id").value()!==undefined) {
-            var id = $("#postit_id").value();
-            var xPos = $("#wity_"+id).css('x');
-            var yPos = $("#wity_"+id).css('y');
-            var content = $("#postit_content").value();
+        if($("#postit_id").val()!=="" || $("#postit_id").val()!==undefined) {
+            var id = $("#postit_id").val();
+            var xPos = $("#wity_"+id).css('left');
+            var yPos = $("#wity_"+id).css('top');
+            var content = $("#postit_content").val();
             sendChangePostIt(id, xPos, yPos, content);
         }
     });
 	
 	//Add logic
 	function addBox(id, xPos, yPos, content) {
+        console.log("Add box! x:"+xPos+" y:"+yPos+" id:"+id);
 		$("#postit_container").append("<div id='wity_"+id+"' class='postit'><div class='postit_header'></div><div class='postit_content'>"+content+"</div></div>");
-		$("#wity_"+id).css('x',xPos);
-        $("#wity_"+id).css('y',yPos);
+		$("#wity_"+id).css('left',xPos);
+        $("#wity_"+id).css('top',yPos);
 	}
 	
 	//Remove logic
@@ -75,12 +76,12 @@ $(document).ready( function() {
 	
 	//Change color button
 	function changePostIt(id, xPos, yPos, content) {
-		$("#wity_"+id).css('x',xPos);
-        $("#wity_"+id).css('y',yPos);
+		$("#wity_"+id).css('left',xPos);
+        $("#wity_"+id).css('top',yPos);
         $("#wity_"+id+" > .postit_content").html(content);
 	}
     
-    $("#background_wrapper").click(function(event) {
+    $("#background_wrapper").click(function(event) {        
         var x = event.pageX - $(this).offset().left;
         var y = event.pageY - $(this).offset().top; 
         
@@ -88,7 +89,7 @@ $(document).ready( function() {
     });
 	
 	//Drag a post-it
-	$( ".postit" ).draggable({
+	/*$( ".postit" ).draggable({
         containment: "#postit_container",
         start: function( event, ui ) {
             //lock();
@@ -98,10 +99,10 @@ $(document).ready( function() {
             console.log("idSubstr:"+idSubstr);
             var id = parseInt(idSubstr);
             
-            var xPos = $("#wity_"+id).css('x');
-            var yPos = $("#wity_"+id).css('y');
+            var xPos = $("#wity_"+id).css('left');
+            var yPos = $("#wity_"+id).css('top');
             var content = $("#wity_"+id+" > .postit_content").html();
             sendChangePostIt(id, xPos, yPos, content);
         }
-    });
+    });*/
 });

@@ -80,8 +80,8 @@ sup {
 
 #background_wrapper {
 	position: absolute;
-	x: 0;
-	y: 0;
+	left: 0;
+	top: 0;
 	width: 1000px;
 	height: 700px;
 	background-image: url('../images/canvas.png');
@@ -90,10 +90,10 @@ sup {
 
 #postit_container {
 	position: absolute;
-	x: 0;
-	y: 0;
-	width: 1000px;
-	height: 700px;
+	left: 0;
+	top: 0;
+	width: 0;
+	height: 0;
 }
 
 .postit {
@@ -114,9 +114,4 @@ sup {
 	width: 100%;
 	color: #000000;
 	font-weight: bold;
-}
-
-#test_postit {
-	x: 50px;
-	y: 50px;
 }
