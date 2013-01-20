@@ -30,7 +30,7 @@ $(document).ready( function() {
 	
 	function sendChangePostIt(id, xPos, yPos, content) {
 		console.log("Request changing post it");
-        var data = {"id": id, "x":xPos,"y":yPos,"content":content};
+        var data = {"id": id,"x":xPos,"y":yPos,"content":content};
 		socket.emit('change box', data);
 	}
 	
@@ -48,7 +48,7 @@ $(document).ready( function() {
     
     function editContent(id) {
         $("#postit_id").val(id);
-        $("#postit_content").val($("#wity_"+id+" > .postit_content").html());
+        $("#postit_editor").val($("#wity_"+id+" > .postit_content").html());
     }
     
     $("#save_button").click(function () {
@@ -56,7 +56,8 @@ $(document).ready( function() {
             var id = $("#postit_id").val();
             var xPos = $("#wity_"+id).css('left');
             var yPos = $("#wity_"+id).css('top');
-            var content = $("#postit_content").val();
+            var content = $("#postit_editor").val();
+            console.log(content);
             sendChangePostIt(id, xPos, yPos, content);
         }
     });
