@@ -5,6 +5,9 @@ $(document).ready( function() {
      */
     var socket = io.connect(document.URL);
     var locked = {};
+    var types = {};
+    
+    var datas_waiting_to_be_added = {};
 	
     /**
      * Add an object in view
@@ -12,17 +15,42 @@ $(document).ready( function() {
     
     //Requesting add operation
     function sendAddBox(xPos,yPos,content) {
-        var data = {"x":xPos,"y":yPos,"content":content};
+        var data = {"x":xPos,"y":yPos,"content":content,"type":"postit"};
         socket.emit('add box',data);
     }
     
     //Applying add operation
 	socket.on('boxAdded', function (data) {
-		$("#postit_container").append("<div id='wity_"+data.id+"' class='postit'><div class='postit_header'><div class='removeButton'>X</div><div class='moveButton'>O</div></div><div class='postit_content'>"+data.content+"</div></div>");
+        if(types[data.type] === undefined ) {
+            if(datas_waiting_to_be_added[data.type] === undefined) {
+                datas_waiting_to_be_added[data.type] = {};
+            }
+            datas_waiting_to_be_added[data.type][data.id] = data;
+            socket.emit('request type',{"type": data.type});
+        } else {
+            addObjectInView(data);
+        }
+	});
+    
+    function addObjectInView(data) {
+        $("#postit_container").append(types[data.type]["view"]);
         $("#wity_"+data.id).css('left',data.x);
         $("#wity_"+data.id).css('top',data.y);
         locked[data.id] = false;
-	});
+    }
+    
+    /**
+     * Receiving type
+     */
+     
+    socket.on('typeSent', function(type) {
+        var newType = type;
+        types[type.id] = newType;
+        
+        for(var data in datas_waiting_to_be_added[type.id]) {
+            addObjectInView(data);
+        }
+    });
     
     /**
      * Remove an object in view

@@ -1,10 +1,11 @@
 <!doctype html>
-<html>
+<html ng-app>
 	<head>
 		<meta charset='utf-8'>
 		<link type="text/css" rel="stylesheet" href="css/ui-lightness/jquery-ui-1.9.2.custom.css">
 		<link type="text/css" rel="stylesheet" href="css/style.css" />
         
+        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.3/angular.min.js"></script>
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="js/jquery-1.8.3.js"></script>
 		<script src="js/jquery-ui-1.9.2.custom.js"></script>
@@ -14,7 +15,7 @@
 		<div id="wrapper">
 			<h1>Business Model Generation</h1>
 			<div id="background_wrapper"></div>
-			<div id="postit_container">
+			<div id="postit_container" ng-model="postits">
 			</div>
 		</div>
         <div>

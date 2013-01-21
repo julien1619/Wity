@@ -38,24 +38,55 @@ function handler (req, res) {
 	});
 }
 
-//Storing all boxes
-var boxes = {};
+//Storing all instances
+var instances = {};
 var id = 0;
 
-//Sending all boxes to the new entrants
-//Receiving all add/remove/update commands on boxes
+var types = {
+    postit: {
+        id: "postit",
+        baseClass: "postit",
+        view: 
+            "<div id='wity_{{postit.id}}' class='postit'>"+
+                "<div class='postit_header'>"+
+                    "<div class='removeButton'>X</div>"+
+                    "<div class='moveButton'>O</div>"+
+                "</div>"+
+                "<div class='postit_content'>{{postit.content}}</div>"+
+            "</div>",
+        model: ["id","x","y","content"],
+        logic: ""
+    }
+};
+
+/*var init = function initTypes() {
+    types["postit"] = {
+        id: "postit",
+        baseClass: "postit",
+        view: 
+            "<div id='wity_{{postit.id}}' class='postit'>"+
+                "<div class='postit_header'>"+
+                    "<div class='removeButton'>X</div>"+
+                    "<div class='moveButton'>O</div>"+
+                "</div>"+
+                "<div class='postit_content'>{{postit.content}}</div>"+
+            "</div>",
+        model: ["id","x","y","content"],
+        logic: ""
+    };
+};*/
+
+//Sending all instances to the new entrants
+//Receiving all add/remove/update commands on instances
 //Broadcasting them
 
 io.sockets.on('connection', function (socket) {
 
-    for(var idStr in boxes){
-        if(boxes[idStr] !== undefined) {
-            socket.emit('boxAdded', boxes[idStr]);
+    for(var idStr in instances){
+        if(instances[idStr] !== undefined) {
+            socket.emit('boxAdded', instances[idStr]);
         }
     }
-	for(var i = 0;i < boxes.length;i++) {
-		socket.emit('boxAdded', { id: i+1, color: boxes[i] });
-	}
 
 	socket.on('add box', function (data) {
         
@@ -63,7 +94,7 @@ io.sockets.on('connection', function (socket) {
         postit.id = id;
         
         var idStr = id+"";
-		boxes[idStr] = postit;
+		instances[idStr] = postit;
         
 		socket.emit('boxAdded', postit);
 		socket.broadcast.emit('boxAdded', postit);
@@ -73,7 +104,7 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('remove box', function (data) {
         var idToRemove = data.id+"";
-        boxes[idToRemove] = undefined;
+        instances[idToRemove] = undefined;
         
         socket.emit('boxRemoved', data);
         socket.broadcast.emit('boxRemoved', data);
@@ -83,9 +114,14 @@ io.sockets.on('connection', function (socket) {
 		console.log("Request changing postit: "+data);
         
         var idStr = data.id+"";
-        boxes[idStr] = data;
+        instances[idStr] = data;
         
         socket.emit('boxChanged', data);
         socket.broadcast.emit('boxChanged', data);
 	});
+    
+    socket.on('request type', function (data) {
+        console.log("TYPES: "+types);
+        socket.emit("typeSent", types[data.type]); 
+    });
 });
