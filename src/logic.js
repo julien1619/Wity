@@ -57,7 +57,7 @@ $(document).ready( function() {
 	});
 	
 	//Change text
-	$("#postit_container").on("click", ".postit_content", function () {
+	$(document).on("click", ".postit_content", function () {
         var self = $(this).parents(".postit");
         var id = getId(self);
         console.log(id + " will be edited.");
@@ -83,7 +83,7 @@ $(document).ready( function() {
     
     var disableDragging = true;
     
-    $("#postit_container").on("mouseenter",".moveButton",function () {
+    /*$("#postit_container").on("mouseenter",".moveButton",function () {
         disableDragging = false;
         
         //Drag a post-it
@@ -108,7 +108,7 @@ $(document).ready( function() {
         disableDragging = true;
         $(".postit").draggable("destroy");
         console.log("postits are fixed");
-    });
+    });*/
     
     $("#postit_container").on("click",".removeButton",function () {
         var postit = $(this).parents(".postit");
