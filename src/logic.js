@@ -56,8 +56,9 @@ $(document).ready( function() {
 	});
 	
 	//Change text
-	$(".postit").on("click", function (event) {
-        var id = getId(event.target);
+	$(document).on("click", ".postit", function () {
+        var self = $(this);
+        var id = getId(self);
         console.log(id + " will be edited.");
         
         if(!locked[id]) {
@@ -124,7 +125,6 @@ $(document).ready( function() {
      
     //Get wity id
     function getId(object) {
-        console.log(object);
         var idSubstr = object.attr('id').substring(5);
         console.log("idSubstr:"+idSubstr);
         return parseInt(idSubstr);
