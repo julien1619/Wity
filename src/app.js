@@ -47,7 +47,6 @@ var id = 0;
 //Broadcasting them
 
 io.sockets.on('connection', function (socket) {
-	//socket.emit('news', { hello: 'world' });
 
     for(var idStr in boxes){
         if(boxes[idStr] !== undefined) {
@@ -60,14 +59,14 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('add box', function (data) {
         
-        var postit = {"id":id,"x":data.x,"y":data.y,"content":data.content};
+        var postit = data;
+        postit.id = id;
         
         var idStr = id+"";
 		boxes[idStr] = postit;
         
-		console.log("postit added");
-		socket.emit('boxAdded', { "id": id, "x":data.x, "y":data.y, "content":data.content});
-		socket.broadcast.emit('boxAdded', { "id": id, "x":data.x, "y":data.y, "content":data.content});
+		socket.emit('boxAdded', postit);
+		socket.broadcast.emit('boxAdded', postit);
         
         id++;
 	});
@@ -75,6 +74,7 @@ io.sockets.on('connection', function (socket) {
 	socket.on('remove box', function (data) {
         var idToRemove = data.id+"";
         boxes[idToRemove] = undefined;
+        
         socket.emit('boxRemoved', data);
         socket.broadcast.emit('boxRemoved', data);
 	});
@@ -84,6 +84,7 @@ io.sockets.on('connection', function (socket) {
         
         var idStr = data.id+"";
         boxes[idStr] = data;
+        
         socket.emit('boxChanged', data);
         socket.broadcast.emit('boxChanged', data);
 	});
