@@ -115,3 +115,23 @@ sup {
 	color: #000000;
 	font-weight: bold;
 }
+
+.removeButton {
+    width: 20px;
+    height: 100%;
+    float: left;
+    margin-left: 10px;
+    text-align: center;
+    font-weight: bold;
+    background-color: red;
+}
+
+.moveButton {
+    width: 20px;
+    height: 100%;
+    float: left;
+    margin-left: 10px;
+    text-align: center;
+    font-weight: bold;
+    background-color: green;
+}

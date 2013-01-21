@@ -18,7 +18,7 @@ $(document).ready( function() {
     
     //Applying add operation
 	socket.on('boxAdded', function (data) {
-		$("#postit_container").append("<div id='wity_"+data.id+"' class='postit'><div class='postit_header'></div><div class='postit_content'>"+data.content+"</div></div>");
+		$("#postit_container").append("<div id='wity_"+data.id+"' class='postit'><div class='postit_header'><div class='removeButton'>X</div><div class='moveButton'>O</div></div><div class='postit_content'>"+data.content+"</div></div>");
         $("#wity_"+data.id).css('left',data.x);
         $("#wity_"+data.id).css('top',data.y);
         locked[data.id] = false;
@@ -29,8 +29,9 @@ $(document).ready( function() {
      */
 	
     //Requesting remove operation
-    function sendRemoveBox() {
-        socket.emit('remove box');
+    function sendRemoveBox(id) {
+        var data = {"id": id};
+        socket.emit('remove box',data);
 	}
     
     //Applying remove operation
@@ -56,8 +57,8 @@ $(document).ready( function() {
 	});
 	
 	//Change text
-	$(document).on("click", ".postit", function () {
-        var self = $(this);
+	$("#postit_container").on("click", ".postit_content", function () {
+        var self = $(this).parents(".postit");
         var id = getId(self);
         console.log(id + " will be edited.");
         
@@ -80,44 +81,63 @@ $(document).ready( function() {
         }
     });
     
+    var disableDragging = true;
+    
+    $("#postit_container").on("mouseenter",".moveButton",function () {
+        disableDragging = false;
+        
+        //Drag a post-it
+        $( ".postit" ).draggable({
+            containment: "#postit_container",
+            start: function( event, ui ) {
+                //lock();
+            },
+            stop: function( event, ui ) {
+                var id = getId($(this));
+                
+                var xPos = $("#wity_"+id).css('left');
+                var yPos = $("#wity_"+id).css('top');
+                var content = $("#wity_"+id+" > .postit_content").html();
+                sendChangePostIt(id, xPos, yPos, content);
+            }
+        });
+        console.log("postits are now draggable");
+    });
+    
+    $("#postit_container").on("mouseleave",".postit",function () {
+        disableDragging = true;
+        $(".postit").draggable("destroy");
+        console.log("postits are fixed");
+    });
+    
+    $("#postit_container").on("click",".removeButton",function () {
+        var postit = $(this).parents(".postit");
+        var id = getId(postit);
+        sendRemoveBox(id);
+    });
+    
     //Add postit onClick
     $("#background_wrapper").click(function(event) {   
-        var xOffset = parseInt(nCss("width","postit"))/2;
-        var yOffset = parseInt(nCss("height","postit"))/2;
-        
-        var maxXPos = parseInt($(this).css("width")) - xOffset*2;
-        var maxYPos = parseInt($(this).css("height")) - yOffset*2;
-        
-        var x = event.pageX - $(this).offset().left - xOffset;
-        var y = event.pageY - $(this).offset().top - yOffset; 
-        
-        console.log(xOffset + " " + yOffset + " " + maxXPos + " " + maxYPos + " " + x + " " + y + " ");
-        
-        x = x>maxXPos ? maxXPos : x;
-        x = x<0 ? 0 : x;
-        y = y>maxYPos ? maxYPos : y;
-        y = y<0 ? 0 : y;
-        
-        sendAddBox(x,y,"");
-    });
-	
-	//Drag a post-it
-	/*$( ".postit" ).draggable({
-        containment: "#postit_container",
-        start: function( event, ui ) {
-            //lock();
-        },
-        stop: function( event, ui ) {
-            var idSubstr = $(this).attr('id').substring(5);
-            console.log("idSubstr:"+idSubstr);
-            var id = parseInt(idSubstr);
+        if(disableDragging) {
+            var xOffset = parseInt(nCss("width","postit"))/2;
+            var yOffset = parseInt(nCss("height","postit"))/2;
             
-            var xPos = $("#wity_"+id).css('left');
-            var yPos = $("#wity_"+id).css('top');
-            var content = $("#wity_"+id+" > .postit_content").html();
-            sendChangePostIt(id, xPos, yPos, content);
+            var maxXPos = parseInt($(this).css("width")) - xOffset*2;
+            var maxYPos = parseInt($(this).css("height")) - yOffset*2;
+            
+            var x = event.pageX - $(this).offset().left - xOffset;
+            var y = event.pageY - $(this).offset().top - yOffset; 
+            
+            console.log(xOffset + " " + yOffset + " " + maxXPos + " " + maxYPos + " " + x + " " + y + " ");
+            
+            x = x>maxXPos ? maxXPos : x;
+            x = x<0 ? 0 : x;
+            y = y>maxYPos ? maxYPos : y;
+            y = y<0 ? 0 : y;
+            
+            sendAddBox(x,y,"");
         }
-    });*/
+    });
     
     /**
      * Utils
@@ -125,6 +145,7 @@ $(document).ready( function() {
      
     //Get wity id
     function getId(object) {
+        console.log(object);
         var idSubstr = object.attr('id').substring(5);
         console.log("idSubstr:"+idSubstr);
         return parseInt(idSubstr);
