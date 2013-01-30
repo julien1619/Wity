@@ -6,6 +6,7 @@ $(document).ready( function() {
     var socket = io.connect(document.URL);
     var locked = {};
     var types = {};
+    var instances = {};
     
     var datas_waiting_to_be_added = {};
 	
@@ -15,7 +16,7 @@ $(document).ready( function() {
     
     //Requesting add operation
     function sendAddBox(xPos,yPos,content) {
-        var data = {"x":xPos,"y":yPos,"content":content,"type":"postit"};
+        var data = {"x":xPos,"y":yPos,"content":content,"type":"postit","where":"postit_container"};
         socket.emit('add box',data);
     }
     
@@ -33,7 +34,15 @@ $(document).ready( function() {
 	});
     
     function addObjectInView(data) {
-        $("#postit_container").append(types[data.type]["view"]);
+        instances[data.id] = data;
+        var object_content = types[data.type]['view'];
+        var specific_content = object_content;
+        
+        for(var model in types[data.type]['model']) {
+            specific_content = specific_content.replace("{$"+model+"$}",data.model);
+        }
+        
+        $("#"+data.where).append(specific_content);
         $("#wity_"+data.id).css('left',data.x);
         $("#wity_"+data.id).css('top',data.y);
         locked[data.id] = false;
@@ -48,6 +57,7 @@ $(document).ready( function() {
         types[type.id] = newType;
         
         for(var data in datas_waiting_to_be_added[type.id]) {
+            //Add a dependency treatment. Recursive ?
             addObjectInView(data);
         }
     });
@@ -64,6 +74,7 @@ $(document).ready( function() {
     
     //Applying remove operation
 	socket.on('boxRemoved', function (data) {
+        delete instances[data.id];
 		$("#wity_"+data.id).remove();
 	});
     
@@ -72,13 +83,13 @@ $(document).ready( function() {
      */
 	
     //Requesting update operation
-    function sendChangePostIt(id, xPos, yPos, content) {
-        var data = {"id": id,"x":xPos,"y":yPos,"content":content};
+    function sendChangePostIt(data) {
 		socket.emit('change box', data);
 	}
     
     //Applying update operation
 	socket.on('boxChanged', function (data) {
+        instances[data.id] = data;
 		$("#wity_"+data.id).css('left',data.x);
         $("#wity_"+data.id).css('top',data.y);
         $("#wity_"+data.id+" > .postit_content").html(data.content);
@@ -90,10 +101,12 @@ $(document).ready( function() {
         var id = getId(self);
         console.log(id + " will be edited.");
         
+        var data = instances[id];
+        
         if(!locked[id]) {
             //sendLock(id);
-            $("#postit_id").val(id);
-            $("#postit_editor").val($("#wity_"+id+" > .postit_content").html());
+            $("#postit_id").val(data.id);
+            $("#postit_editor").val(data.content);
         }
 	});
     
@@ -101,11 +114,9 @@ $(document).ready( function() {
     $("#save_button").click(function () {
         if($("#postit_id").val()!=="" || $("#postit_id").val()!==undefined) {
             var id = $("#postit_id").val();
-            var xPos = $("#wity_"+id).css('left');
-            var yPos = $("#wity_"+id).css('top');
             var content = $("#postit_editor").val();
             console.log(content);
-            sendChangePostIt(id, xPos, yPos, content);
+            sendChangePostIt({"id":id, "content":content});
         }
     });
     
@@ -122,11 +133,11 @@ $(document).ready( function() {
             },
             stop: function( event, ui ) {
                 var id = getId($(this));
+                var data = instances[id];
                 
-                var xPos = $("#wity_"+id).css('left');
-                var yPos = $("#wity_"+id).css('top');
-                var content = $("#wity_"+id+" > .postit_content").html();
-                sendChangePostIt(id, xPos, yPos, content);
+                var xPos = $("#wity_"+data.id).css('left');
+                var yPos = $("#wity_"+data.id).css('top');
+                sendChangePostIt({"id":id, "x":xPos, "y":yPos});
             }
         });
         console.log("postits are now draggable");

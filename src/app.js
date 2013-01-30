@@ -47,12 +47,12 @@ var types = {
         id: "postit",
         baseClass: "postit",
         view: 
-            "<div id='wity_{{postit.id}}' class='postit'>"+
+            "<div id='wity_{$id$}' class='postit'>"+
                 "<div class='postit_header'>"+
                     "<div class='removeButton'>X</div>"+
                     "<div class='moveButton'>O</div>"+
                 "</div>"+
-                "<div class='postit_content'>{{postit.content}}</div>"+
+                "<div class='postit_content'>{$content$}</div>"+
             "</div>",
         model: ["id","x","y","content"],
         logic: ""
@@ -104,7 +104,7 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('remove box', function (data) {
         var idToRemove = data.id+"";
-        instances[idToRemove] = undefined;
+        delete instances[idToRemove];
         
         socket.emit('boxRemoved', data);
         socket.broadcast.emit('boxRemoved', data);
@@ -114,10 +114,15 @@ io.sockets.on('connection', function (socket) {
 		console.log("Request changing postit: "+data);
         
         var idStr = data.id+"";
-        instances[idStr] = data;
         
-        socket.emit('boxChanged', data);
-        socket.broadcast.emit('boxChanged', data);
+        for(var property in data) {
+            instances[idStr][property] = data[property];
+        }
+        
+        var changedData = instances[idStr];
+        
+        socket.emit('boxChanged', changedData);
+        socket.broadcast.emit('boxChanged', changedData);
 	});
     
     socket.on('request type', function (data) {
