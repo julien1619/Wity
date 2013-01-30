@@ -22,7 +22,9 @@ $(document).ready( function() {
     
     //Applying add operation
 	socket.on('boxAdded', function (data) {
-        if(types[data.type] === undefined ) {
+        console.log("type: "+types[data.type]);
+        if(typeof types[data.type] === "undefined" ) {
+            console.log("Type manquant, on l'appelle et on attend.");
             if(datas_waiting_to_be_added[data.type] === undefined) {
                 datas_waiting_to_be_added[data.type] = {};
             }
@@ -34,18 +36,29 @@ $(document).ready( function() {
 	});
     
     function addObjectInView(data) {
+        console.log("On ajoute: "+data);
         instances[data.id] = data;
-        var object_content = types[data.type]['view'];
+        var type = types[data.type];
+        console.log("Avec la view: "+type.view);
+        var object_content = types[data.type].view;
         var specific_content = object_content;
         
-        for(var model in types[data.type]['model']) {
-            specific_content = specific_content.replace("{$"+model+"$}",data.model);
+        var length = types[data.type].model.length,
+        element = null;
+        for (var i = 0; i < length; i++) {
+            element = types[data.type].model[i];
+            specific_content = specific_content.replace("{$"+element+"$}",data[element]);
+            // Do something with element i.
         }
+        
+        console.log("specific content: "+specific_content);
         
         $("#"+data.where).append(specific_content);
         $("#wity_"+data.id).css('left',data.x);
         $("#wity_"+data.id).css('top',data.y);
         locked[data.id] = false;
+        
+        delete datas_waiting_to_be_added[data.id];
     }
     
     /**
@@ -58,7 +71,7 @@ $(document).ready( function() {
         
         for(var data in datas_waiting_to_be_added[type.id]) {
             //Add a dependency treatment. Recursive ?
-            addObjectInView(data);
+            addObjectInView(datas_waiting_to_be_added[type.id][data]);
         }
     });
     
@@ -117,6 +130,8 @@ $(document).ready( function() {
             var content = $("#postit_editor").val();
             console.log(content);
             sendChangePostIt({"id":id, "content":content});
+            $("#postit_id").val("");
+            $("#postit_editor").val("");
         }
     });
     

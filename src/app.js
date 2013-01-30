@@ -59,23 +59,6 @@ var types = {
     }
 };
 
-/*var init = function initTypes() {
-    types["postit"] = {
-        id: "postit",
-        baseClass: "postit",
-        view: 
-            "<div id='wity_{{postit.id}}' class='postit'>"+
-                "<div class='postit_header'>"+
-                    "<div class='removeButton'>X</div>"+
-                    "<div class='moveButton'>O</div>"+
-                "</div>"+
-                "<div class='postit_content'>{{postit.content}}</div>"+
-            "</div>",
-        model: ["id","x","y","content"],
-        logic: ""
-    };
-};*/
-
 //Sending all instances to the new entrants
 //Receiving all add/remove/update commands on instances
 //Broadcasting them
@@ -115,14 +98,16 @@ io.sockets.on('connection', function (socket) {
         
         var idStr = data.id+"";
         
-        for(var property in data) {
-            instances[idStr][property] = data[property];
+        if(typeof instances[idStr] !== "undefined") {
+            for(var property in data) {
+                instances[idStr][property] = data[property];
+            }
+            
+            var changedData = instances[idStr];
+            
+            socket.emit('boxChanged', changedData);
+            socket.broadcast.emit('boxChanged', changedData);
         }
-        
-        var changedData = instances[idStr];
-        
-        socket.emit('boxChanged', changedData);
-        socket.broadcast.emit('boxChanged', changedData);
 	});
     
     socket.on('request type', function (data) {
