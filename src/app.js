@@ -40,6 +40,7 @@ function handler (req, res) {
 
 //Storing all instances
 var instances = {};
+var locked = {};
 var id = 0;
 
 var types = {
@@ -109,6 +110,36 @@ io.sockets.on('connection', function (socket) {
             socket.broadcast.emit('boxChanged', changedData);
         }
 	});
+    
+    socket.on('request lock', function(data) {
+        var idStr = data.id+"";
+        var socketId = socket.id;
+        
+        console.log(idStr + " will be locked by "+socketId);
+        
+        if(typeof locked[idStr] === "undefined") {
+            locked[idStr] = socketId;
+            socket.emit('lockedForYou', data);
+            socket.broadcast.emit('locked', data);
+        } else {
+            socket.emit('locked', data);
+        }       
+    });
+    
+    socket.on('release lock', function(data) {
+        var idStr = data.id+"";
+        var socketId = socket.id;
+        
+        console.log(idStr + " will be released by "+socketId);
+        
+        if(typeof locked[idStr] == socketId) {
+            delete locked[idStr];
+            socket.emit('released', data);
+            socket.broadcast.emit('released', data);
+        } else {
+            socket.emit('locked', data);
+        }       
+    });
     
     socket.on('request type', function (data) {
         console.log("TYPES: "+types);

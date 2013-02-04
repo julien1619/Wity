@@ -5,6 +5,7 @@ $(document).ready( function() {
      */
     var socket = io.connect(document.URL);
     var locked = {};
+    var access = {};
     var types = {};
     var instances = {};
     
@@ -107,6 +108,51 @@ $(document).ready( function() {
         $("#wity_"+data.id).css('top',data.y);
         $("#wity_"+data.id+" > .postit_content").html(data.content);
 	});
+    
+    function lockObject(data) {
+        socket.emit('request lock',data);
+    }
+    
+    function releaseObject(data) {
+        socket.emit('release lock',data);
+    }
+    
+    socket.on('lockedForYou', function(data) {
+        access[data.id] = data;
+        //Allow dragging
+        //Drag a post-it
+        $( "#wity_"+data.id ).draggable({
+            containment: "#postit_container",
+            start: function( event, ui ) {
+                //lock();
+            },
+            stop: function( event, ui ) {
+                var id = getId($(this));
+                var instance = instances[id];
+                
+                var xPos = $("#wity_"+instance.id).css('left');
+                var yPos = $("#wity_"+instance.id).css('top');
+                sendChangePostIt({"id":id, "x":xPos, "y":yPos});
+            }
+        });
+    });
+    
+    socket.on('locked', function(data) {
+        locked[data.id] = data;
+    });
+    
+    socket.on('released', function(data) {
+        if(typeof locked[data.id] !== "undefined") {
+            delete locked[data.id];
+        }
+        
+        if(typeof access[data.id] !== "undefined") {
+            delete access[data.id];
+            //Disallow dragging
+            $("#wity_"+data.id).draggable("stop");
+            $("#wity_"+data.id).draggable("destroy");
+        }
+    });
 	
 	//Change text
 	$("#postit_container").on("click", ".postit_content", function () {
@@ -135,33 +181,16 @@ $(document).ready( function() {
         }
     });
     
-    var disableDragging = true;
-    
     $("#postit_container").on("mouseenter",".moveButton",function () {
-        disableDragging = false;
-        
-        //Drag a post-it
-        $( ".postit" ).draggable({
-            containment: "#postit_container",
-            start: function( event, ui ) {
-                //lock();
-            },
-            stop: function( event, ui ) {
-                var id = getId($(this));
-                var data = instances[id];
-                
-                var xPos = $("#wity_"+data.id).css('left');
-                var yPos = $("#wity_"+data.id).css('top');
-                sendChangePostIt({"id":id, "x":xPos, "y":yPos});
-            }
-        });
-        console.log("postits are now draggable");
+        var postit = $(this).parents(".postit");
+        var id = getId(postit);
+        lockObject({"id":id});
     });
     
     $("#postit_container").on("mouseleave",".postit",function () {
-        disableDragging = true;
-        $(".postit").draggable("destroy");
-        console.log("postits are fixed");
+        var postit = $(this);
+        var id = getId(postit);
+        releaseObject({"id":id});
     });
     
     $("#postit_container").on("click",".removeButton",function () {
@@ -172,7 +201,7 @@ $(document).ready( function() {
     
     //Add postit onClick
     $("#background_wrapper").click(function(event) {   
-        if(disableDragging) {
+        //if(disableDragging) {
             var xOffset = parseInt(nCss("width","postit"))/2;
             var yOffset = parseInt(nCss("height","postit"))/2;
             
@@ -190,7 +219,7 @@ $(document).ready( function() {
             y = y<0 ? 0 : y;
             
             sendAddBox(x,y,"");
-        }
+        //}
     });
     
     /**
