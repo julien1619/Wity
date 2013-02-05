@@ -203,6 +203,6 @@ var Wity = (function() {
 	};
 	
 	return {"init": init};
-});
+})();
 
 Wity.init();
