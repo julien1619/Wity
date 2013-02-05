@@ -37,31 +37,34 @@ $(document).ready( function() {
 	});
     
     function addObjectInView(data) {
-        console.log("On ajoute: "+data);
-        instances[data.id] = data;
-        var type = types[data.type];
-        console.log("Avec la view: "+type.view);
-        var object_content = types[data.type].view;
-        var specific_content = object_content;
-        
-        var length = types[data.type].model.length,
-        element = null;
-        for (var i = 0; i < length; i++) {
-            element = types[data.type].model[i];
-            specific_content = specific_content.replace("{$"+element+"$}",data[element]);
-            // Do something with element i.
+        console.log("On ajoute: " + data);
+        if (typeof instances[data.id] == "undefined") {
+            instances[data.id] = data;
+            var type = types[data.type];
+            console.log("Avec la view: " + type.view);
+            var object_content = types[data.type].view;
+            var specific_content = object_content;
+    
+            var length = types[data.type].model.length,
+                element = null;
+            for (var i = 0; i < length; i++) {
+                element = types[data.type].model[i];
+                specific_content = specific_content.replace("{$" + element + "$}", data[element]);
+                // Do something with element i.
+            }
+    
+            console.log("specific content: " + specific_content);
+    
+            $("#" + data.where).append(specific_content);
+            $("#wity_" + data.id).css('left', data.x);
+            $("#wity_" + data.id).css('top', data.y);
+            locked[data.id] = false;
+        } else {
+            console.log("Object already here.");
         }
-        
-        console.log("specific content: "+specific_content);
-        
-        $("#"+data.where).append(specific_content);
-        $("#wity_"+data.id).css('left',data.x);
-        $("#wity_"+data.id).css('top',data.y);
-        locked[data.id] = false;
-        
+    
         delete datas_waiting_to_be_added[data.id];
     }
-    
     /**
      * Receiving type
      */
@@ -110,25 +113,33 @@ $(document).ready( function() {
 	});
     
     function lockObject(data) {
+        console.log("Request lock on "+data.id);
         socket.emit('request lock',data);
     }
     
     function releaseObject(data) {
+        console.log("Request release on "+data.id);
         socket.emit('release lock',data);
     }
     
+    var allowUnlock = true;
+    
     socket.on('lockedForYou', function(data) {
+        console.log("Locked for me "+data.id);
         access[data.id] = data;
         //Allow dragging
         //Drag a post-it
         $( "#wity_"+data.id ).draggable({
             containment: "#postit_container",
             start: function( event, ui ) {
+                allowUnlock = false;
                 //lock();
             },
             stop: function( event, ui ) {
                 var id = getId($(this));
                 var instance = instances[id];
+                
+                allowUnlock = true;
                 
                 var xPos = $("#wity_"+instance.id).css('left');
                 var yPos = $("#wity_"+instance.id).css('top');
@@ -138,18 +149,19 @@ $(document).ready( function() {
     });
     
     socket.on('locked', function(data) {
+        console.log("Locked "+data.id);
         locked[data.id] = data;
     });
     
     socket.on('released', function(data) {
-        if(typeof locked[data.id] !== "undefined") {
+        console.log("Released "+data.id);
+        if(typeof locked[data.id] != "undefined") {
             delete locked[data.id];
         }
         
-        if(typeof access[data.id] !== "undefined") {
+        if(typeof access[data.id] != "undefined") {
             delete access[data.id];
             //Disallow dragging
-            $("#wity_"+data.id).draggable("stop");
             $("#wity_"+data.id).draggable("destroy");
         }
     });
@@ -184,13 +196,17 @@ $(document).ready( function() {
     $("#postit_container").on("mouseenter",".moveButton",function () {
         var postit = $(this).parents(".postit");
         var id = getId(postit);
-        lockObject({"id":id});
+        if((access[id] === undefined) && (locked[id] !== undefined)) {
+            lockObject({"id":id});
+        }        
     });
     
-    $("#postit_container").on("mouseleave",".postit",function () {
-        var postit = $(this);
-        var id = getId(postit);
-        releaseObject({"id":id});
+    $("#postit_container").on("mouseleave",".postit_header",function () {
+        if(allowUnlock === true) {
+            var postit = $(this).parents(".postit");
+            var id = getId(postit);
+            releaseObject({"id":id});
+        }
     });
     
     $("#postit_container").on("click",".removeButton",function () {
@@ -199,9 +215,19 @@ $(document).ready( function() {
         sendRemoveBox(id);
     });
     
+    $("#postit_container").on("mouseenter",".postit",function() {
+        preventAdd = true;
+    });
+    
+    $("#postit_container").on("mouseleave",".postit",function() {
+        preventAdd = false;
+    });
+    
+    var preventAdd = false;
+    
     //Add postit onClick
-    $("#background_wrapper").click(function(event) {   
-        //if(disableDragging) {
+    $("#postit_container").click(function(event) {   
+        if(preventAdd === false) {
             var xOffset = parseInt(nCss("width","postit"))/2;
             var yOffset = parseInt(nCss("height","postit"))/2;
             
@@ -219,7 +245,7 @@ $(document).ready( function() {
             y = y<0 ? 0 : y;
             
             sendAddBox(x,y,"");
-        //}
+        }
     });
     
     /**
@@ -228,9 +254,7 @@ $(document).ready( function() {
      
     //Get wity id
     function getId(object) {
-        console.log(object);
         var idSubstr = object.attr('id').substring(5);
-        console.log("idSubstr:"+idSubstr);
         return parseInt(idSubstr);
     }
     
