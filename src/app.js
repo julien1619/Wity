@@ -19,8 +19,25 @@ var Wity = (function() {
 		postit: {
 			id: "postit",
 			baseClass: "postit",
-			view: "<div id='wity_{$id$}' class='postit'>" + "<div class='postit_header'>" + "<div class='removeButton'>X</div>" + "<div class='moveButton'>O</div>" + "</div>" + "<div class='postit_content'>{$content$}</div>" + "</div>",
+			view: 
+			"<div id='wity_{$id$}' class='postit'>" + 
+				"<div class='postit_header'>" + 
+					"<div class='removeButton'>X</div>" + 
+					"<div class='moveButton'>O</div>" + 
+				"</div>" + 
+				"<div class='postit_content'>{$content$}</div>" + 
+			"</div>",
 			model: ["id", "x", "y", "content"],
+			logic: ""
+		},
+		thumnail: {
+			id: "thumbnail",
+			baseClass: "thumbnail",
+			view: 
+			"<div id='wity_{$id$}' class='thumbnail'>" +
+				"{$name$}" +
+			"</div>",
+			model: ["id", "name"],
 			logic: ""
 		}
 	};

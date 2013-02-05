@@ -128,3 +128,16 @@ sup {
     font-weight: bold;
     background-color: green;
 }
+
+.thumbnail {
+	float: left;
+	width: 50px;
+	height: 50px;
+}
+
+#file_container {
+	width: 1000px;
+	height: 700px;
+	background-color: #e0e0e0;
+	padding: 20px;
+}
